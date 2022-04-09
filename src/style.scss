@@ -1,8 +1,7 @@
 @import "./mixins.scss";
 @import "./loader.scss";
-$main-color: green;
-$second-color: #f8e9;
-
+$main-color: rgb(192, 210, 210);
+$second-color: rgba(235, 124, 218, 0.6);
 
 html,
 body,
@@ -20,8 +19,6 @@ h1 {
     padding: 1rem;
   }
 }
-
-
 
 .blog {
   display: flex;
@@ -59,18 +56,6 @@ h1 {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 .blog .post .comments .comment {
   border: 1px dotted;
   background-color: $second-color;
@@ -97,4 +82,3 @@ h1 {
     transform: rotate(360deg);
   }
 }
-
