@@ -1,93 +1,98 @@
-const apiUrl: string = "https://jsonplaceholder.typicode.com";
+import {Author} from './model/Author';
+import {Comment} from './model/Comment';
+import {Post} from './model/post';
 
-const postsUrl: string = apiUrl + "/posts";
-const commentsUrl: string = `${apiUrl}/comments`;
-const usersUrl: string = `${apiUrl}/users`;
-
-interface Author {
-    id: number;
-    name: string;
-    username: string;
-    email: string;
+interface DataProvider {
+  getPosts(): Promise<Post[]>;
+  getAuthor(authorId: number): Promise<Author>;
+  getComments(postId: number): Promise<Comment[]>;
 }
 
-interface Post {
-    userId: number;
-    id: number;
-    title: string;
-    body: string;
-}
+class Api implements DataProvider {
+  postsSuffix: string = 'posts';
 
-interface Comment {
-    postId: number;
-    id: number;
-    name: string;
-    email: string;
-    body: string;
+  constructor(public readonly apiUrl: string) {}
 
-
-}
-async function loadComments(postId: number): Promise<void> {
-  const postCommentsurl = `${commentsUrl}?postId=${postId}`;
-    const comments: Comment[] = await getApiResponse(postCommentsurl);
-    const commentsContainer = document.getElementById("comments");
-    commentsContainer.innerHTML = "";
-    for (const comment of comments) {
-      const commentElement = document.createElement("div");
-      commentElement.classList.add("comment");
-      commentElement.innerHTML = `
-        <h4><i>${comment.name}</i> by <code>${comment.email}</code></h4>
-        <p>${comment.body}</p>
-      `;
-      commentsContainer.append(commentElement);
-    }
+  public getPosts(): Promise<Post[]> {
+    return this.getApiResponse(this.getPostsUrl());
   }
 
-async function addListElement(post: Post): Promise<void> {
-    const element = document.createElement("li");
-    element.innerText = `${post.id} ${post.title}`;
-    element.classList.add("title");
-    element.addEventListener("click", async () => {
-      const contentElement = document.getElementById("content");
-      contentElement.innerHTML = `<h2>${post.title}</h2><p>${post.body}</p>`;
-      setAuthor(post.userId);
-      loadComments(post.id);
-    });
-    const listContainer = document.getElementById("list");
-    listContainer.append(element);
+  public getAuthor(authorId: number): Promise<Author> {
+    const userUrl = `${this.apiUrl}/users/${authorId}`;
+    return this.getApiResponse(userUrl);
   }
 
-async function setAuthor(authorId: number): Promise<void> {
- const userUrl = `${usersUrl}/${authorId}`;
-    const user: Author = await getApiResponse(userUrl);
-    const userElement = document.getElementById("author");
-    userElement.classList.add("author");
-    userElement.innerHTML = `<h3>${user.name} <small>(${user.email})</small></h3>`;
+  public getComments(postId: number): Promise<Comment[]> {
+    const postCommentsUrl = `${this.apiUrl}/comments?postId=${postId}`;
+    return this.getApiResponse(postCommentsUrl);
   }
 
-async function getApiResponse(url:string): Promise<any> {
+  public getPostsUrl(): string {
+    return `${this.apiUrl}/${this.postsSuffix}`;
+  }
+
+  private async getApiResponse(url: string): Promise<any> {
     const postsRequest: Promise<Response> = fetch(url);
     const response: Response = await postsRequest;
     const json: any = await response.json();
     return json;
   }
+}
 
-  document.addEventListener("DOMContentLoaded", (): void => {
-    const content = document.querySelector("#content");
-  
-    setTimeout(() => {
-      getApiResponse(postsUrl)
-        .then((posts: Post[]) => {
-          content.innerHTML = "Select post&hellip;";
-  
-          for (const post of posts) {
-            addListElement(post);
-          }
-        })
-        
-        .finally((): void => {
-          const loader = document.querySelector("#spinner");
-          loader.remove();
-        });
-    }, 2000);
+const api = new Api('https://jsonplaceholder.typicode.com');
+
+async function setAuthor(authorId: number) {
+  const user: Author = await api.getAuthor(authorId);
+  const userElement = document.getElementById('author');
+  userElement.classList.add('author');
+  userElement.innerHTML = `<h3>${user.name} <small>(${user.email})</small></h3>`;
+}
+
+async function loadComments(postId: number) {
+  const comments: Comment[] = await api.getComments(postId);
+  const commentsContainer = document.getElementById('comments');
+  commentsContainer.innerHTML = '';
+  for (const comment of comments) {
+    const commentElement = document.createElement('div');
+    commentElement.classList.add('comment');
+    commentElement.innerHTML = `
+      <h4><i>${comment.name}</i> by <code>${comment.email}</code></h4>
+      <p>${comment.body}</p>
+    `;
+    commentsContainer.append(commentElement);
+  }
+}
+
+async function addListElement(post: Post): Promise<void> {
+  const element = document.createElement('li');
+  element.innerText = `${post.id} ${post.title}`;
+  element.classList.add('title');
+  element.addEventListener('click', async () => {
+    const contentElement = document.getElementById('content');
+    contentElement.innerHTML = `<h2>${post.title}</h2><p>${post.body}</p>`;
+    setAuthor(post.userId);
+    loadComments(post.id);
   });
+  const listContainer = document.getElementById('list');
+  listContainer.append(element);
+}
+
+document.addEventListener('DOMContentLoaded', (): void => {
+  const content = document.querySelector('#content');
+
+  setTimeout((): void => {
+    api
+      .getPosts()
+      .then(posts => {
+        content.innerHTML = 'Select post&hellip;';
+
+        for (const post of posts) {
+          addListElement(post);
+        }
+      })
+      .finally((): void => {
+        const loader = document.querySelector('#spinner');
+        loader.remove();
+      });
+  }, 2000);
+});
