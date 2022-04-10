@@ -1,7 +1,7 @@
 const path = require("path");
-const HTMLWebpackPlugin = require("html-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ESLintWebpackPlugin = require('eslint-webpack-plugin');
 module.exports = {
   entry: ["./src/main.js", "./src/style.scss"],
   output: {
@@ -21,5 +21,6 @@ module.exports = {
       template: "./src/index.html",
     }),
     new MiniCssExtractPlugin(),
+    new ESLintWebpackPlugin(),
   ],
 };
